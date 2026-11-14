@@ -7,18 +7,20 @@ import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import edu.itc.shop_rest.domain.InMemoryProductRepository;
 import edu.itc.shop_rest.domain.ProductRepository;
+import edu.itc.shop_rest.domain.ProductService;
 
 public class Main {
     public static final URI BASE = URI.create("http://localhost:8080/api/");
-
-    /** The application: scanned resources/providers + one shared repository. */
     public static ResourceConfig config() {
+        var repo = new InMemoryProductRepository();
+        var service = new ProductService(repo);
         return new ResourceConfig()
                 .packages("edu.itc.shop_rest.api")
                 .register(new AbstractBinder() {
                     @Override
                     protected void configure() {
-                        bind(new InMemoryProductRepository()).to(ProductRepository.class);
+                        bind(repo).to(ProductRepository.class);
+                        bind(service).to(ProductService.class);
                     }
                 });
     }

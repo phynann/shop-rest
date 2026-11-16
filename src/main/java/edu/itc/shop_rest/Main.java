@@ -8,6 +8,10 @@ import org.glassfish.jersey.server.ResourceConfig;
 import edu.itc.shop_rest.domain.InMemoryProductRepository;
 import edu.itc.shop_rest.domain.ProductRepository;
 import edu.itc.shop_rest.domain.ProductService;
+import edu.itc.shop_rest.api.ProductResource;
+import edu.itc.shop_rest.api.error.ProblemMapper;
+import edu.itc.shop_rest.api.error.ValidationMapper;
+import edu.itc.shop_rest.api.params.MoneyConverterProvider;
 
 public class Main {
     public static final URI BASE = URI.create("http://localhost:8080/api/");
@@ -15,14 +19,17 @@ public class Main {
         var repo = new InMemoryProductRepository();
         var service = new ProductService(repo);
         return new ResourceConfig()
-                .packages("edu.itc.shop_rest.api")
-                .register(new AbstractBinder() {
-                    @Override
-                    protected void configure() {
-                        bind(repo).to(ProductRepository.class);
-                        bind(service).to(ProductService.class);
-                    }
-                });
+        .register(ProductResource.class)
+        .register(MoneyConverterProvider.class)
+        .register(ValidationMapper.class)
+        .register(ProblemMapper.class)
+        .register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(repo).to(ProductRepository.class);
+                bind(service).to(ProductService.class);
+            }
+        });
     }
 
     public static void main(String[] args) throws Exception {

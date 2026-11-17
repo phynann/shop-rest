@@ -13,6 +13,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import edu.itc.shop_rest.api.dto.ProductDto;
 import edu.itc.shop_rest.api.dto.StockChange;
+import edu.itc.shop_rest.api.filter.Compress;
 import edu.itc.shop_rest.api.params.ProductFilter;
 import edu.itc.shop_rest.domain.Money;
 import edu.itc.shop_rest.domain.Product;
@@ -33,6 +34,7 @@ public class ProductResource {
     }
 
     @GET
+    @Compress
     public List<ProductDto> list(@BeanParam @Valid ProductFilter f) {
         requireEur(f.minPrice, "minPrice");
         requireEur(f.maxPrice, "maxPrice");

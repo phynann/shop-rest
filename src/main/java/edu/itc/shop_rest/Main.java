@@ -11,6 +11,10 @@ import edu.itc.shop_rest.domain.ProductService;
 import edu.itc.shop_rest.api.ProductResource;
 import edu.itc.shop_rest.api.error.ProblemMapper;
 import edu.itc.shop_rest.api.error.ValidationMapper;
+import edu.itc.shop_rest.api.filter.ApiKeyFilter;
+import edu.itc.shop_rest.api.filter.CorrelationFilter;
+import edu.itc.shop_rest.api.filter.CorsFilter;
+import edu.itc.shop_rest.api.filter.GzipWriterInterceptor;
 import edu.itc.shop_rest.api.params.MoneyConverterProvider;
 
 public class Main {
@@ -23,6 +27,10 @@ public class Main {
         .register(MoneyConverterProvider.class)
         .register(ValidationMapper.class)
         .register(ProblemMapper.class)
+        .register(CorrelationFilter.class)
+        .register(CorsFilter.class)
+        .register(ApiKeyFilter.class)
+        .register(GzipWriterInterceptor.class)
         .register(new AbstractBinder() {
             @Override
             protected void configure() {

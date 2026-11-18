@@ -1,5 +1,6 @@
 package edu.itc.shop_rest.api;
 
+import edu.itc.shop_rest.api.dto.ProductDto;
 import edu.itc.shop_rest.domain.Product;
 import edu.itc.shop_rest.domain.ProductRepository;
 import jakarta.inject.Inject;
@@ -9,10 +10,12 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository repo;
+    private final edu.itc.shop_rest.domain.ProductService mutations;
 
     @Inject
     public ProductService(ProductRepository repo) {
         this.repo = repo;
+        this.mutations = new edu.itc.shop_rest.domain.ProductService(repo);
     }
 
     public List<Product> search(ProductFilter f) {
@@ -25,14 +28,18 @@ public class ProductService {
     }
 
     public Product update(long id, ProductDto dto) {
-        Product current = get(id);
-        Product updated = new Product(id, dto.name(), dto.sku(), dto.price(), dto.stock(), current.version());
-        return repo.save(updated);
+        return mutations.replace(id, dto.toProduct(id, 0));
     }
 
-    public Product patchStock(long id, int stock) {
-        Product current = get(id);
-        Product updated = new Product(id, current.name(), current.sku(), current.price(), stock, current.version());
-        return repo.save(updated);
+    public Product create(ProductDto dto) {
+        return mutations.create(dto.toProduct(0, 0));
+    }
+
+    public void delete(long id) {
+        mutations.delete(id);
+    }
+
+    public Product patchStock(long id, int delta) {
+        return mutations.adjustStock(id, delta);
     }
 }

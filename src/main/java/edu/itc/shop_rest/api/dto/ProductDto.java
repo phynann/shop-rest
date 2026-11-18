@@ -8,15 +8,20 @@ import edu.itc.shop_rest.domain.Product;
 @XmlRootElement(name = "product")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ProductDto {
-    @XmlAttribute public long id;
+    @XmlAttribute
+    public long id;
 
-    @NotBlank @Size(max = 80)
+    @NotBlank
+    @Size(max = 80)
     public String name;
 
-    @NotNull @Pattern(regexp = "[A-Z]{2}-\\d{2}")
+    @NotNull
+    @Pattern(regexp = "[A-Z]{2}-\\d{2}")
     public String sku;
 
-    @NotNull @DecimalMin("0.01") @Digits(integer = 8, fraction = 2)
+    @NotNull
+    @DecimalMin("0.01")
+    @Digits(integer = 8, fraction = 2)
     public BigDecimal price;
 
     @PositiveOrZero
@@ -25,9 +30,13 @@ public class ProductDto {
     public ProductDto() { }
 
     public static ProductDto from(Product p) {
-        var d = new ProductDto();
-        d.id = p.id(); d.name = p.name(); d.sku = p.sku(); d.price = p.price(); d.stock = p.stock();
-        return d;
+        ProductDto dto = new ProductDto();
+        dto.id = p.id();
+        dto.name = p.name();
+        dto.sku = p.sku();
+        dto.price = p.price();
+        dto.stock = p.stock();
+        return dto;
     }
 
     public Product toProduct(long id, int version) {

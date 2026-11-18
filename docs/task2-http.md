@@ -1,65 +1,126 @@
-# Task 2 - HTTP transcript
+# Task 2 - CRUD and JSON/XML HTTP transcript
+
+Mutating requests use the development API key (`demo-123`). Product IDs below
+are from one run of `shop-rest-all-tests.sh` and may differ on another run.
+
+## Create JSON product (201 + Location)
+
+```sh
+curl -i -X POST localhost:8080/api/products \
+  -H 'Content-Type: application/json' -H 'X-Api-Key: demo-123' \
+  -d '{"name":"Teapot","sku":"TP-01","price":31.00,"stock":5}'
 ```
-$ curl -i -X POST localhost:8080/api/products -H Content-Type: application/json -d {"name":"Teapot","sku":"TP-01","price":31.00,"stock":5}
+
+```http
 HTTP/1.1 201 Created
-Location: http://localhost:8080/api/products/4
+Location: http://localhost:8080/api/products/34
 Content-Type: application/json
-Content-Length: 62
 
-{"id":4,"name":"Teapot","sku":"TP-01","price":31.00,"stock":5}
-$ curl -i -X POST localhost:8080/api/products -H Content-Type: application/json -d {"name":"Teapot","sku":"TP-01","price":31.00,"stock":5}
+{"id":34,"name":"Teapot","sku":"TP-01","price":31.00,"stock":5}
+```
+
+## Duplicate SKU (409)
+
+```sh
+curl -i -X POST localhost:8080/api/products \
+  -H 'Content-Type: application/json' -H 'X-Api-Key: demo-123' \
+  -d '{"name":"Teapot","sku":"TP-01","price":31.00,"stock":5}'
+```
+
+```http
 HTTP/1.1 409 Conflict
-Content-Length: 0
+Content-Type: application/problem+json
 
+{"type":"about:blank","title":"Conflict","status":409,"detail":"SKU already exists: TP-01","instance":"/api/products"}
+```
 
-$ curl -i localhost:8080/api/products/4 -H Accept: application/xml
-HTTP/1.1 200 OK
-Content-Type: application/xml
-Content-Length: 152
+## XML round trip (POST, then GET)
 
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><product id="4"><name>Teapot</name><sku>TP-01</sku><price>31.00</price><stock>5</stock></product>
-$ curl -i -X POST localhost:8080/api/products -H Content-Type: application/xml -H Accept: application/xml -d <product><name>Cup</name><sku>CP-01</sku><price>3.00</price><stock>8</stock></product>
+```sh
+curl -i -X POST localhost:8080/api/products \
+  -H 'Content-Type: application/xml' -H 'Accept: application/xml' \
+  -H 'X-Api-Key: demo-123' \
+  -d '<product><name>Cup</name><sku>CP-01</sku><price>3.00</price><stock>8</stock></product>'
+```
+
+```http
 HTTP/1.1 201 Created
-Location: http://localhost:8080/api/products/5
+Location: http://localhost:8080/api/products/35
 Content-Type: application/xml
-Content-Length: 148
 
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><product id="5"><name>Cup</name><sku>CP-01</sku><price>3.00</price><stock>8</stock></product>
-$ curl -i localhost:8080/api/products/5 -H Accept: application/xml
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><product id="35"><name>Cup</name><sku>CP-01</sku><price>3.00</price><stock>8</stock></product>
+```
+
+```sh
+curl -i localhost:8080/api/products/35 -H 'Accept: application/xml'
+```
+
+```http
 HTTP/1.1 200 OK
 Content-Type: application/xml
-Content-Length: 148
 
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?><product id="5"><name>Cup</name><sku>CP-01</sku><price>3.00</price><stock>8</stock></product>
-$ curl -i -X PATCH localhost:8080/api/products/3/stock -H Content-Type: application/json -d {"delta":-1}
-HTTP/1.1 409 Conflict
-Content-Length: 0
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><product id="35"><name>Cup</name><sku>CP-01</sku><price>3.00</price><stock>8</stock></product>
+```
 
+## PATCH stock (200; updated representation)
 
-$ curl -i -X PATCH localhost:8080/api/products/2/stock -H Content-Type: application/json -d {"delta":-5}
+```sh
+curl -i -X PATCH localhost:8080/api/products/2/stock \
+  -H 'Content-Type: application/json' -H 'X-Api-Key: demo-123' \
+  -d '{"delta":-5}'
+```
+
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 59
 
 {"id":2,"name":"Mug","sku":"MG-01","price":6.50,"stock":35}
-$ curl -i -X PUT localhost:8080/api/products/4 -H Content-Type: application/json -d {"name":"Big Teapot","sku":"TP-01","price":35.00,"stock":7}
-HTTP/1.1 200 OK
-Content-Type: application/json
-Content-Length: 66
+```
 
-{"id":4,"name":"Big Teapot","sku":"TP-01","price":35.00,"stock":7}
-$ curl -i -X DELETE localhost:8080/api/products/4
+## Insufficient stock (409)
+
+```sh
+curl -i -X PATCH localhost:8080/api/products/3/stock \
+  -H 'Content-Type: application/json' -H 'X-Api-Key: demo-123' \
+  -d '{"delta":-1}'
+```
+
+```http
+HTTP/1.1 409 Conflict
+Content-Type: application/problem+json
+
+{"type":"about:blank","title":"Conflict","status":409,"detail":"Product 3 has stock 0, cannot apply -1","instance":"/api/products/3/stock"}
+```
+
+## DELETE (204, then 404)
+
+```sh
+curl -i -X DELETE localhost:8080/api/products/34 -H 'X-Api-Key: demo-123'
+```
+
+```http
 HTTP/1.1 204 No Content
+```
 
+```sh
+curl -i -X DELETE localhost:8080/api/products/34 -H 'X-Api-Key: demo-123'
+```
 
-$ curl -i -X DELETE localhost:8080/api/products/4
+```http
 HTTP/1.1 404 Not Found
-Content-Length: 0
+Content-Type: application/problem+json
 
+{"type":"about:blank","title":"Not Found","status":404,"detail":"Product 34 not found","instance":"/api/products/34"}
+```
 
-$ curl -i -X POST localhost:8080/api/products -H Content-Type: text/plain -d Teapot
+## Unsupported media type (415)
+
+```sh
+curl -i -X POST localhost:8080/api/products \
+  -H 'Content-Type: text/plain' -H 'X-Api-Key: demo-123' -d 'Teapot'
+```
+
+```http
 HTTP/1.1 415 Unsupported Media Type
-Content-Length: 0
-
-
+Content-Type: application/problem+json
 ```
